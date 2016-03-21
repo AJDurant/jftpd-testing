@@ -1,0 +1,76 @@
+<html>
+<head>
+<title>jftpd - README</title>
+<link rel="stylesheet" type="text/css" name="style" href="style.css">
+</head>
+
+<body bgcolor=white>
+
+<h3>jftpd - design notes</h3>
+
+<p>Communication between client occurs via two separate socket connections as
+shown in the following diagram:
+
+<pre>
+                                                  -------------
+                                                  |/---------\|
+                                                  ||   User  ||    --------
+                                                  ||Interface|&lt;---&gt;| User |
+                                                  |\----^----/|    --------
+                        ----------                |     |     |
+                        |/------\|  FTP Commands  |/----V----\|
+                        ||Server|&lt;----------------&gt;|   User  ||
+                        ||  PI  ||   FTP Replies  ||    PI   ||
+                        |\--^---/|                |\----^----/|
+                        |   |    |                |     |     |
+            --------    |/--V---\|      Data      |/----V----\|    --------
+            | File |&lt;---&gt;|Server|&lt;----------------&gt;|  User   |&lt;---&gt;| File |
+            |System|    || DTP  ||   Connection   ||   DTP   ||    |System|
+            --------    |\------/|                |\---------/|    --------
+                        ----------                -------------
+
+                        Server-FTP                   USER-FTP
+
+[diagram from RFC 959]
+</pre>
+
+<p>All FTP commands are issued through control connection from the User PI
+(Protocol Interpreter) to the Server PI. Actual data is transferred via the
+data connection between the Server DTP (Data Transfer Process) and and User
+DTP.
+
+<p>jftpd is an implementation of the left hand side of the above diagram. The
+source files associated with this diagram are:
+
+<pre>
+	ServerPI.java
+	ServerDTP.java
+</pre>
+
+<p>The jftpd server is a multithreaded application listening on port 21 for FTP
+requests. For each request, a new ServerPI thread is started and an associated
+ServerDTP object is created to handle data transfers. The main loop that
+accepts connections is defined in Server.java.
+
+<p>Data representations and transmission modes have been isolated in the
+following source files:
+
+<pre>
+	Representation.java
+	 - AsciiRepresentation.java
+	 - ImageRepresentation.java
+
+	TransmissionMode.java
+	 - StreamTransmissionMode.java
+</pre>
+
+<p>The ServerPI is responsible for interpreting all commands issued from the
+control connection. There is a separate method to handle each command, and the
+reflection API is used to lookup the appropriate method to handle each command.
+
+<p><hr>
+Copyright (C) 1998 <a href="mailto:ryan@maxiem.com">Ryan Heise</a>
+
+</body>
+
+</html>

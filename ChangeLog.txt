@@ -1,0 +1,21 @@
+jftpd change log
+
+0.3	20010710
+
+	- implemented additional commands: PWD, CDUP, SIZE, MKD, DELE, RMD,
+	  REIN, MDTM
+	- fixed up path resolution
+	- handle_user now returns a 331 reply instead of a 311 (Søren Jensen)
+	- handle_quit clears username and password (Søren Jensen)
+	- restructured transmission/representation code
+
+0.2	20000627
+
+	- AsciiRepresentation.java no longer skips first byte (Bill Jones)
+	- Server provides service() method for use in "superserver"
+
+0.1	19981122
+
+	- Initial release
+
+-- Ryan Heise <ryan@maxiem.com>

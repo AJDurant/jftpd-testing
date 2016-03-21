@@ -1,0 +1,127 @@
+<html>
+<head>
+<title>jftpd - README</title>
+<link rel="stylesheet" type="text/css" name="style" href="style.css">
+</head>
+
+<body bgcolor=white>
+
+<h3>jftpd - readme</h3>
+
+<p>jftpd is an FTP server written in Java. It currently implements the
+following commands:
+
+<p>
+<table>
+<tr><td>USER<td>PASS<td>CWD<td>CDUP<td>QUIT<td>REIN
+<tr><td>PORT<td>TYPE<td>STRU<td>MODE<td>RETR<td>STOR
+<tr><td>DELE<td>RMD<td>MKD<td>PWD<td>LIST<td>NLST
+<tr><td>SYST<td>NOOP<td>SIZE<td>MDTM
+</table>
+
+<p>jftpd does <i>not</i> currently implement the following commands:
+
+<p>
+<table>
+<tr><td>ACCT<td>SMNT<td>PASV<td>STOU<td>APPE<td>ALLO
+<tr><td>REST<td>RNFR<td>RNTO<td>ABOR<td>SITE<td>STAT
+<tr><td>HELP
+</table>
+
+<p>jftpd supports the ASCII and IMAGE (binary) representation types.
+
+<p>The only transmission mode supported is STREAM, and the only structure
+supported is file-structure.
+
+<p>No user authentication is currently provided.
+
+<p>A copy of the FTP specification (RFC 959) can be found <a
+href="http://www.progsoc.uts.edu.au/~rheise/projects/jftpd/rfc959.html">here</a>.
+
+<h3>LICENSE</h3>
+
+<p>jftpd is Copyright (C) 1998 Ryan Heise
+
+<p>This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+<p>This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<a href="copying.html">GNU General Public License</a> for more details.
+
+<p>You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+<h3>INSTALLATION</h3>
+
+<p>Include the classes directory in your CLASSPATH. You can change the name
+from classes to anything you prefer or put it in a zip or jar archive.
+
+<p>There should be a configuration file called jftpd.properties in
+rheise/jftpd with some configuration options:
+
+<ul>
+
+<p><li>log.priority
+
+	<p>This property specifies the level of logging to be enabled. The
+	priorities from highest to lowest are:
+
+	<table border=1>
+	<tr><td>EMERG<td>system is unusable
+	<tr><td>ALERT<td>action must be taken immediately
+	<tr><td>CRIT<td>critical conditions
+	<tr><td>ERR<td>error conditions
+	<tr><td>WARNING<td>warning conditions
+	<tr><td>NOTICE<td>normal but significant condition
+	<tr><td>INFO<td>informational
+	<tr><td>DEBUG<td>debug-level messages
+	</table>
+
+	<p>These correspond to logging priorities supported by the syslog
+	facility of UNIX and possibly in the future, logging will be handed
+	off to an external logging facility such as this.
+
+	<p>By setting this property to a particular priority, all log messages of
+	that priority or of higher priority will be logged. For example, a
+	value of CRIT will log all CRIT, ALERT and EMERG messages. Setting the
+	priority to DEBUG will enable all log messages. Finally, setting the
+	priority to OFF will turn logging off completely.
+
+<p><li>log.output
+
+	<p>This specifies the output file that log messages will be logged to.
+	The special file "stderr" may be specified to output log messages to
+	the console.
+
+</ul>
+
+<p>To run jftpd, type:
+<pre>
+	java rheise.jftpd.Server
+</pre>
+or
+<pre>
+	java.rheise.jftpd.Server &lt;port&gt;
+</pre>
+<p>if you do not have privileges to bind to port 21. If you use a non-standard
+port (say, 7645), you can test jftpd using a web browser with a url such as:
+<pre>
+	ftp://server.host.edu:7645/path/to/file
+</pre>
+
+<h3>DESIGN</h3>
+
+Documentation of the current design can be found <a href="design.html">here</a>.
+
+<p><hr>
+Copyright (C) 1998 <a href="mailto:ryan@maxiem.com">Ryan Heise</a>
+
+</body>
+
+</html>

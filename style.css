@@ -1,0 +1,20 @@
+BODY
+	{
+	background-color:#ffffff;
+	font-family:Helvetica
+	}
+
+PRE
+	{
+	font-family:Courier
+	}
+
+A:link
+	{
+	color: blue
+	}
+
+A:visited
+	{
+	color: blue
+	}
