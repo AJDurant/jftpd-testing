@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,7 +23,7 @@ import rheise.jftpd.Server;
 public class TestServer {
     
     private static String serverAddr = "127.0.0.1";
-    private static int serverPort = 2345;
+    private static int serverPort = 23450;
     private static Process jftpd;
     
     interface ftpAction {
@@ -35,6 +36,11 @@ public class TestServer {
     public static void setUpBeforeClass() throws Exception {
         setUpCommands();
         setUpServer();
+        try {
+            TimeUnit.SECONDS.sleep(1);
+        } catch (InterruptedException e) {
+            //Handle exception
+        }
     }
 
     @AfterClass
@@ -43,11 +49,14 @@ public class TestServer {
     }
     
     private FTPClient ftp;
+    private Random random;
     
     @Before
     public void setUp() {
+    	random = new Random();
         ftp = new FTPClient();
         try {
+        	ftp.setConnectTimeout(5000);
             ftp.connect(serverAddr, serverPort);
             ftp.login("user", "pass");
         } catch (IOException ioe) {
@@ -79,7 +88,21 @@ public class TestServer {
         }
     }
     
-    @Test
+    
+    public void testCommandCDUP() {
+    	try {
+    		assertEquals("/", ftp.printWorkingDirectory());
+    		ftp.cwd("test");
+    		assertEquals("/test", ftp.printWorkingDirectory());
+			ftp.cdup();
+			assertEquals("/", ftp.printWorkingDirectory());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+    
+    
     public void fuzzTest() {
         while (true) {
             boolean actionResult = runRandomFTPAction(ftp);
@@ -92,7 +115,6 @@ public class TestServer {
     
     
     private boolean runRandomFTPAction(FTPClient ftp2) {
-        Random random = new Random();
         int action = random.nextInt(ftpActions.length);
         return ftpActions[action].action(ftp2);
     }
