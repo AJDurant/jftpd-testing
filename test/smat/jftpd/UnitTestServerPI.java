@@ -92,7 +92,6 @@ public class UnitTestServerPI {
             reply = ce.getCode();
             endStr = ce.getText();
         } catch (Exception e) {
-            e.printStackTrace();
             fail("Uncaught exception: " + e.getClass().getSimpleName() + " " + e.getMessage());
         }
 
@@ -115,7 +114,6 @@ public class UnitTestServerPI {
         } catch (CommandException ce) {
             reply = ce.getCode();
         } catch (Exception e) {
-            e.printStackTrace();
             fail("Uncaught exception: " + e.getClass().getSimpleName() + " " + e.getMessage());
         }
 
@@ -135,7 +133,6 @@ public class UnitTestServerPI {
         } catch (CommandException ce) {
             reply = ce.getCode();
         } catch (Exception e) {
-            e.printStackTrace();
             fail("Uncaught exception: " + e.getClass().getSimpleName() + " " + e.getMessage());
         }
 
@@ -162,7 +159,6 @@ public class UnitTestServerPI {
             reply = ce.getCode();
             replyStr = byteArrayOutputStream.toString();
         } catch (Exception e) {
-            e.printStackTrace();
             fail("Uncaught exception: " + e.getClass().getSimpleName() + " " + e.getMessage());
         }
         removeTempFile(pathname);
