@@ -1,13 +1,17 @@
 package smat.jftpd;
 
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.StringTokenizer;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -23,6 +27,9 @@ public class UnitTestServerPI {
 	private static ByteArrayInputStream byteArrayInputStream;
 	
 	private ServerPI serverPI;
+	private String line;
+	private StringTokenizer st;
+	private int reply;
 	
 	@BeforeClass
     public static void setUpBeforeClass() throws Exception {
@@ -37,16 +44,15 @@ public class UnitTestServerPI {
 	@Before
 	public void setUp() throws Exception {
 		serverPI = new ServerPI(clientMock);
+		setUpAuth();
+		byteArrayOutputStream.reset();
+		
+		reply = -1;
 	}
 
 	@Test
 	public void testHandle_cdup() {
-		setUpAuth();
-		
-		String line;
-		StringTokenizer st;
-		
-		int reply = -1;
+
 		String startStr = "";
 		String endStr = "";
 		
@@ -54,7 +60,6 @@ public class UnitTestServerPI {
 			line = "PWD";
 			st = new StringTokenizer(line);
 			st.nextToken();
-			byteArrayOutputStream.reset();
 			
 			serverPI.handle_pwd(line, st);
 			startStr = byteArrayOutputStream.toString();
@@ -81,31 +86,93 @@ public class UnitTestServerPI {
 			endStr = byteArrayOutputStream.toString();
 			
 			
-		} catch (CommandException e) {
-			e.printStackTrace();
-			fail("Command failed: " + e.getMessage());
+		} catch (CommandException ce) {
+			reply = ce.getCode();
+			endStr = ce.getText();
 		} catch (Exception e) {
-			fail("Uncaught exception: " + e.getMessage());
+			e.printStackTrace();
+			fail("Uncaught exception: " + e.getClass().getSimpleName() + " " + e.getMessage());
 		}
 		
-		assertEquals(200, reply);
+		// Expect 200 Command okay. OR 250 Requested file action okay, completed.
+		assertThat(reply, anyOf(is(200), is(250)));
+		// Expect PWD to match the start.
 		assertEquals(startStr, endStr);
 	}
 
 	@Test
 	public void testHandle_port() {
-		fail("Not yet implemented"); // TODO
+		
+		try {
+			line = "PORT a,b,c,d,e,f";
+			st = new StringTokenizer(line);
+			st.nextToken();
+			
+			reply = serverPI.handle_port(line, st);
+		} catch (CommandException ce) {
+			reply = ce.getCode();
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("Uncaught exception: " + e.getClass().getSimpleName() + " " + e.getMessage());
+		}
+		
+		// Expect 501 Syntax error in parameters or arguments.
+		assertEquals(501, reply);
 	}
 
 	@Test
 	public void testHandle_stru() {
-		fail("Not yet implemented"); // TODO
+		
+		try {
+			line = "STRU R";
+			st = new StringTokenizer(line);
+			st.nextToken();
+			
+			reply = serverPI.handle_stru(line, st);
+		} catch (CommandException ce) {
+			reply = ce.getCode();
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("Uncaught exception: " + e.getClass().getSimpleName() + " " + e.getMessage());
+		}
+		
+		// Expect 504 Command not implemented for that parameter.
+		assertEquals(504, reply);
+	}
+	
+	@Test
+	public void testHandle_mdtm() {
+		String pathname = "mdtm.temp";
+		long time = 1459347459000L;
+		String replyStr = "";
+		
+		createTempFile(pathname, time);
+		
+		try {
+			line = "MDTM " + pathname;
+			st = new StringTokenizer(line);
+			st.nextToken();
+			
+			reply = serverPI.handle_mdtm(line, st);
+			replyStr = byteArrayOutputStream.toString();
+		} catch (CommandException ce) {
+			reply = ce.getCode();
+			replyStr = byteArrayOutputStream.toString();
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("Uncaught exception: " + e.getClass().getSimpleName() + " " + e.getMessage());
+		}
+		removeTempFile(pathname);
+		
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+		String dateStr = dateFormat.format(new Date(time));
+		
+		assertEquals(213, reply);
+		assertEquals("213 " + dateStr + "\n", replyStr);
 	}
 
 	
 	private void setUpAuth() {
-		String line;
-		StringTokenizer st;
 		try {
 			line = "USER test";
 			st = new StringTokenizer(line);
@@ -117,8 +184,26 @@ public class UnitTestServerPI {
 			st.nextToken();
 			serverPI.handle_pass(line, st);
 		} catch (CommandException e) {
+			e.printStackTrace();
+		}
+		// Clear any output received
+		byteArrayOutputStream.reset();
+	}
+	
+	private void createTempFile(String pathname, long time) {
+		File f = new File(pathname);
+		try {
+			f.createNewFile();
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		f.setLastModified(time);
+	}
+	
+	private void removeTempFile(String pathname) {
+		File f = new File(pathname);
+		f.delete();
 	}
 }
