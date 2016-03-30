@@ -1,35 +1,35 @@
 package smat.jftpd;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.net.ftp.FTPClient;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import org.apache.commons.net.ftp.FTPClient;
-
 import rheise.jftpd.Server;
 
 public class TestServer {
-    
+
     private static String serverAddr = "127.0.0.1";
     private static int serverPort = 23450;
     private static Process jftpd;
-    
+
     interface ftpAction {
         boolean action(FTPClient ftp);
     }
-    
+
     private static ftpAction[] ftpActions;
 
     @BeforeClass
@@ -39,7 +39,7 @@ public class TestServer {
         try {
             TimeUnit.SECONDS.sleep(1);
         } catch (InterruptedException e) {
-            //Handle exception
+            // Handle exception
         }
     }
 
@@ -47,16 +47,16 @@ public class TestServer {
     public static void tearDownAfterClass() throws Exception {
         jftpd.destroy();
     }
-    
+
     private FTPClient ftp;
     private Random random;
-    
+
     @Before
     public void setUp() {
-    	random = new Random();
+        random = new Random();
         ftp = new FTPClient();
         try {
-        	ftp.setConnectTimeout(5000);
+            ftp.setConnectTimeout(5000);
             ftp.connect(serverAddr, serverPort);
             ftp.login("user", "pass");
         } catch (IOException ioe) {
@@ -64,14 +64,14 @@ public class TestServer {
             fail("FTP connection failed.");
         }
     }
-    
+
     @After
     public void tearDown() {
-        if(ftp.isConnected()) {
+        if (ftp.isConnected()) {
             try {
-              ftp.disconnect();
-            } catch(IOException ioe) {
-              // do nothing
+                ftp.disconnect();
+            } catch (IOException ioe) {
+                // do nothing
             }
         }
     }
@@ -81,28 +81,25 @@ public class TestServer {
         try {
             boolean testNoop = ftp.sendNoOp();
             assertTrue(testNoop);
-        }
-        catch (IOException ioe) {
+        } catch (IOException ioe) {
             ioe.printStackTrace();
             fail("FTP command failed.");
         }
     }
-    
-    
+
     public void testCommandCDUP() {
-    	try {
-    		assertEquals("/", ftp.printWorkingDirectory());
-    		ftp.cwd("test");
-    		assertEquals("/test", ftp.printWorkingDirectory());
-			ftp.cdup();
-			assertEquals("/", ftp.printWorkingDirectory());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        try {
+            assertEquals("/", ftp.printWorkingDirectory());
+            ftp.cwd("test");
+            assertEquals("/test", ftp.printWorkingDirectory());
+            ftp.cdup();
+            assertEquals("/", ftp.printWorkingDirectory());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
-    
-    
+
     public void fuzzTest() {
         while (true) {
             boolean actionResult = runRandomFTPAction(ftp);
@@ -112,38 +109,90 @@ public class TestServer {
             }
         }
     }
-    
-    
+
     private boolean runRandomFTPAction(FTPClient ftp2) {
         int action = random.nextInt(ftpActions.length);
         return ftpActions[action].action(ftp2);
     }
-    
+
     private static void setUpCommands() {
-        ftpActions = new ftpAction[] {
-                new ftpAction() { public boolean action(FTPClient ftp) { return ftpCWD(ftp); } },
-                new ftpAction() { public boolean action(FTPClient ftp) { return ftpCDUP(ftp); } },
-                new ftpAction() { public boolean action(FTPClient ftp) { return ftpPORT(ftp); } },
-                new ftpAction() { public boolean action(FTPClient ftp) { return ftpTYPE(ftp); } },
-                new ftpAction() { public boolean action(FTPClient ftp) { return ftpSTRU(ftp); } },
-                new ftpAction() { public boolean action(FTPClient ftp) { return ftpMODE(ftp); } },
-                new ftpAction() { public boolean action(FTPClient ftp) { return ftpRETR(ftp); } },
-                new ftpAction() { public boolean action(FTPClient ftp) { return ftpSTOR(ftp); } },
-                new ftpAction() { public boolean action(FTPClient ftp) { return ftpDELE(ftp); } },
-                new ftpAction() { public boolean action(FTPClient ftp) { return ftpRMD(ftp); } },
-                new ftpAction() { public boolean action(FTPClient ftp) { return ftpMKD(ftp); } },
-                new ftpAction() { public boolean action(FTPClient ftp) { return ftpPWD(ftp); } },
-                new ftpAction() { public boolean action(FTPClient ftp) { return ftpLIST(ftp); } },
-                new ftpAction() { public boolean action(FTPClient ftp) { return ftpNLST(ftp); } },
-                new ftpAction() { public boolean action(FTPClient ftp) { return ftpSYST(ftp); } },
-                new ftpAction() { public boolean action(FTPClient ftp) { return ftpNOOP(ftp); } },
-                new ftpAction() { public boolean action(FTPClient ftp) { return ftpSIZE(ftp); } },
-                new ftpAction() { public boolean action(FTPClient ftp) { return ftpMDTM(ftp); } },
-        };
+        ftpActions = new ftpAction[] { new ftpAction() {
+            public boolean action(FTPClient ftp) {
+                return ftpCWD(ftp);
+            }
+        }, new ftpAction() {
+            public boolean action(FTPClient ftp) {
+                return ftpCDUP(ftp);
+            }
+        }, new ftpAction() {
+            public boolean action(FTPClient ftp) {
+                return ftpPORT(ftp);
+            }
+        }, new ftpAction() {
+            public boolean action(FTPClient ftp) {
+                return ftpTYPE(ftp);
+            }
+        }, new ftpAction() {
+            public boolean action(FTPClient ftp) {
+                return ftpSTRU(ftp);
+            }
+        }, new ftpAction() {
+            public boolean action(FTPClient ftp) {
+                return ftpMODE(ftp);
+            }
+        }, new ftpAction() {
+            public boolean action(FTPClient ftp) {
+                return ftpRETR(ftp);
+            }
+        }, new ftpAction() {
+            public boolean action(FTPClient ftp) {
+                return ftpSTOR(ftp);
+            }
+        }, new ftpAction() {
+            public boolean action(FTPClient ftp) {
+                return ftpDELE(ftp);
+            }
+        }, new ftpAction() {
+            public boolean action(FTPClient ftp) {
+                return ftpRMD(ftp);
+            }
+        }, new ftpAction() {
+            public boolean action(FTPClient ftp) {
+                return ftpMKD(ftp);
+            }
+        }, new ftpAction() {
+            public boolean action(FTPClient ftp) {
+                return ftpPWD(ftp);
+            }
+        }, new ftpAction() {
+            public boolean action(FTPClient ftp) {
+                return ftpLIST(ftp);
+            }
+        }, new ftpAction() {
+            public boolean action(FTPClient ftp) {
+                return ftpNLST(ftp);
+            }
+        }, new ftpAction() {
+            public boolean action(FTPClient ftp) {
+                return ftpSYST(ftp);
+            }
+        }, new ftpAction() {
+            public boolean action(FTPClient ftp) {
+                return ftpNOOP(ftp);
+            }
+        }, new ftpAction() {
+            public boolean action(FTPClient ftp) {
+                return ftpSIZE(ftp);
+            }
+        }, new ftpAction() {
+            public boolean action(FTPClient ftp) {
+                return ftpMDTM(ftp);
+            }
+        }, };
     }
-    
+
     protected static boolean ftpCWD(FTPClient ftp2) {
-        
+
         return false;
     }
 
@@ -234,11 +283,11 @@ public class TestServer {
 
     private static void setUpServer() {
         ProcessBuilder pb = new ProcessBuilder();
-        
+
         String fullClassName = Server.class.getName();
         String pathToClassFiles = new File("./classes").getPath();
         pb.command("java", "-cp", pathToClassFiles, fullClassName, Integer.toString(serverPort));
-        
+
         try {
             jftpd = pb.start();
         } catch (IOException ex) {
