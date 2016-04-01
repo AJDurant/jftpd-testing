@@ -4,7 +4,7 @@
 	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="var" path="APACHE_COMMONS/commons-net-3.4/commons-net-3.4.jar"/>
+	<classpathentry kind="var" path="APACHE_COMMONS/commons-net-3.4/commons-net-3.4.jar" sourcepath="/APACHE_COMMONS/commons-net-3.4-src"/>
 	<classpathentry kind="var" path="USER_LIB/mockito/mockito-all-1.10.19.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>

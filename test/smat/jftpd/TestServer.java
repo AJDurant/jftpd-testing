@@ -4,18 +4,19 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import rheise.jftpd.Server;
@@ -23,7 +24,7 @@ import rheise.jftpd.Server;
 public class TestServer {
 
     private static String serverAddr = "127.0.0.1";
-    private static int serverPort = 23450;
+    private static int serverPort = 2345;
     private static Process jftpd;
 
     interface ftpAction {
@@ -32,21 +33,21 @@ public class TestServer {
 
     private static ftpAction[] ftpActions;
 
-    @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
-        setUpCommands();
-        setUpServer();
-        try {
-            TimeUnit.SECONDS.sleep(1);
-        } catch (InterruptedException e) {
-            // Handle exception
-        }
-    }
-
-    @AfterClass
-    public static void tearDownAfterClass() throws Exception {
-        jftpd.destroy();
-    }
+    // @BeforeClass
+    // public static void setUpBeforeClass() throws Exception {
+    // setUpCommands();
+    // setUpServer();
+    // try {
+    // TimeUnit.SECONDS.sleep(1);
+    // } catch (InterruptedException e) {
+    // // Handle exception
+    // }
+    // }
+    //
+    // @AfterClass
+    // public static void tearDownAfterClass() throws Exception {
+    // jftpd.destroy();
+    // }
 
     private FTPClient ftp;
     private Random random;
@@ -56,9 +57,10 @@ public class TestServer {
         random = new Random();
         ftp = new FTPClient();
         try {
-            ftp.setConnectTimeout(5000);
+            // ftp.setConnectTimeout(5000);
             ftp.connect(serverAddr, serverPort);
             ftp.login("user", "pass");
+            ftp.enterLocalActiveMode();
         } catch (IOException ioe) {
             ioe.printStackTrace();
             fail("FTP connection failed.");
@@ -87,6 +89,7 @@ public class TestServer {
         }
     }
 
+    @Test
     public void testCommandCDUP() {
         try {
             assertEquals("/", ftp.printWorkingDirectory());
@@ -98,6 +101,51 @@ public class TestServer {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+
+    @Test
+    public void testFileStore() {
+        String pathname = "stor.temp";
+        boolean reply = false;
+
+        File f;
+
+        InputStream input;
+        InputStream file;
+
+        String inputString = "Test Input data";
+        byte[] inputBytes = inputString.getBytes();
+
+        String fileString = "";
+        byte[] fileBytes = new byte[32];
+        int fileLength = 0;
+
+        input = new ByteArrayInputStream(inputBytes);
+        try {
+            reply = ftp.storeFile(pathname, input);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        assertTrue("FTP Store command failed", reply);
+
+        try {
+            f = new File(pathname);
+            file = new FileInputStream(f);
+            fileLength = file.read(fileBytes);
+            fileString = new String(fileBytes, 0, fileLength);
+
+            file.close();
+            f.delete();
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        assertEquals(inputString, fileString);
     }
 
     public void fuzzTest() {
@@ -117,76 +165,76 @@ public class TestServer {
 
     private static void setUpCommands() {
         ftpActions = new ftpAction[] { new ftpAction() {
-            public boolean action(FTPClient ftp) {
-                return ftpCWD(ftp);
+            public boolean action(FTPClient ftp2) {
+                return ftpCWD(ftp2);
             }
         }, new ftpAction() {
-            public boolean action(FTPClient ftp) {
-                return ftpCDUP(ftp);
+            public boolean action(FTPClient ftp2) {
+                return ftpCDUP(ftp2);
             }
         }, new ftpAction() {
-            public boolean action(FTPClient ftp) {
-                return ftpPORT(ftp);
+            public boolean action(FTPClient ftp2) {
+                return ftpPORT(ftp2);
             }
         }, new ftpAction() {
-            public boolean action(FTPClient ftp) {
-                return ftpTYPE(ftp);
+            public boolean action(FTPClient ftp2) {
+                return ftpTYPE(ftp2);
             }
         }, new ftpAction() {
-            public boolean action(FTPClient ftp) {
-                return ftpSTRU(ftp);
+            public boolean action(FTPClient ftp2) {
+                return ftpSTRU(ftp2);
             }
         }, new ftpAction() {
-            public boolean action(FTPClient ftp) {
-                return ftpMODE(ftp);
+            public boolean action(FTPClient ftp2) {
+                return ftpMODE(ftp2);
             }
         }, new ftpAction() {
-            public boolean action(FTPClient ftp) {
-                return ftpRETR(ftp);
+            public boolean action(FTPClient ftp2) {
+                return ftpRETR(ftp2);
             }
         }, new ftpAction() {
-            public boolean action(FTPClient ftp) {
-                return ftpSTOR(ftp);
+            public boolean action(FTPClient ftp2) {
+                return ftpSTOR(ftp2);
             }
         }, new ftpAction() {
-            public boolean action(FTPClient ftp) {
-                return ftpDELE(ftp);
+            public boolean action(FTPClient ftp2) {
+                return ftpDELE(ftp2);
             }
         }, new ftpAction() {
-            public boolean action(FTPClient ftp) {
-                return ftpRMD(ftp);
+            public boolean action(FTPClient ftp2) {
+                return ftpRMD(ftp2);
             }
         }, new ftpAction() {
-            public boolean action(FTPClient ftp) {
-                return ftpMKD(ftp);
+            public boolean action(FTPClient ftp2) {
+                return ftpMKD(ftp2);
             }
         }, new ftpAction() {
-            public boolean action(FTPClient ftp) {
-                return ftpPWD(ftp);
+            public boolean action(FTPClient ftp2) {
+                return ftpPWD(ftp2);
             }
         }, new ftpAction() {
-            public boolean action(FTPClient ftp) {
-                return ftpLIST(ftp);
+            public boolean action(FTPClient ftp2) {
+                return ftpLIST(ftp2);
             }
         }, new ftpAction() {
-            public boolean action(FTPClient ftp) {
-                return ftpNLST(ftp);
+            public boolean action(FTPClient ftp2) {
+                return ftpNLST(ftp2);
             }
         }, new ftpAction() {
-            public boolean action(FTPClient ftp) {
-                return ftpSYST(ftp);
+            public boolean action(FTPClient ftp2) {
+                return ftpSYST(ftp2);
             }
         }, new ftpAction() {
-            public boolean action(FTPClient ftp) {
-                return ftpNOOP(ftp);
+            public boolean action(FTPClient ftp2) {
+                return ftpNOOP(ftp2);
             }
         }, new ftpAction() {
-            public boolean action(FTPClient ftp) {
-                return ftpSIZE(ftp);
+            public boolean action(FTPClient ftp2) {
+                return ftpSIZE(ftp2);
             }
         }, new ftpAction() {
-            public boolean action(FTPClient ftp) {
-                return ftpMDTM(ftp);
+            public boolean action(FTPClient ftp2) {
+                return ftpMDTM(ftp2);
             }
         }, };
     }
