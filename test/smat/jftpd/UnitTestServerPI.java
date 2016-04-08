@@ -17,9 +17,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.StringTokenizer;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import rheise.jftpd.CommandException;
 import rheise.jftpd.ServerPI;
@@ -34,6 +37,9 @@ public class UnitTestServerPI {
     private String line;
     private StringTokenizer st;
     private int reply;
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
@@ -52,6 +58,12 @@ public class UnitTestServerPI {
         byteArrayOutputStream.reset();
 
         reply = -1;
+    }
+
+    @After
+    public void tearDown() {
+        byteArrayInputStream.reset();
+        byteArrayOutputStream.reset();
     }
 
     @Test
@@ -167,7 +179,84 @@ public class UnitTestServerPI {
         String dateStr = dateFormat.format(new Date(time));
 
         assertEquals(213, reply);
-        assertEquals("213 " + dateStr + "\n", replyStr);
+        assertEquals("213 " + dateStr + "\r\n", replyStr);
+    }
+
+    @Test
+    public void testHandle_user() {
+        String replyStr = "";
+
+        line = "USER test";
+        st = new StringTokenizer(line);
+        st.nextToken();
+        try {
+            serverPI.handle_user(line, st);
+        } catch (CommandException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        line = "NOOP";
+        st = new StringTokenizer(line);
+        st.nextToken();
+        try {
+            reply = serverPI.handle_noop(line, st);
+        } catch (CommandException e) {
+            reply = e.getCode();
+            replyStr = e.getText();
+        }
+
+        assertEquals(530, reply);
+        assertEquals("Please login with USER and PASS.", replyStr);
+
+    }
+
+    @Test
+    public void testHandle_pwd() {
+        String replyStr = "";
+
+        line = "PWD";
+        st = new StringTokenizer(line);
+        st.nextToken();
+        try {
+            reply = serverPI.handle_pwd(line, st);
+        } catch (CommandException e) {
+            reply = e.getCode();
+        }
+        replyStr = byteArrayOutputStream.toString();
+
+        assertEquals(257, reply);
+        assertEquals("257 \"/\"\r\n", replyStr);
+    }
+
+    @Test
+    public void testHandle_type() {
+        line = "TYPE A N";
+        st = new StringTokenizer(line);
+        st.nextToken();
+        try {
+            reply = serverPI.handle_type(line, st);
+        } catch (CommandException e) {
+            reply = e.getCode();
+        }
+
+        assertEquals(200, reply);
+    }
+
+    @Test
+    public void testHandle_mode() {
+        line = "MODE SS";
+        st = new StringTokenizer(line);
+        st.nextToken();
+        try {
+            reply = serverPI.handle_mode(line, st);
+        } catch (CommandException e) {
+            reply = e.getCode();
+        } catch (Exception e) {
+            fail("Uncaught exception: " + e.getClass().getSimpleName() + " " + e.getMessage());
+        }
+
+        assertEquals(501, reply);
     }
 
     private void setUpAuth() {

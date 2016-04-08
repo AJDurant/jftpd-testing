@@ -5,18 +5,24 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import rheise.jftpd.Server;
@@ -33,21 +39,21 @@ public class TestServer {
 
     private static ftpAction[] ftpActions;
 
-    // @BeforeClass
-    // public static void setUpBeforeClass() throws Exception {
-    // setUpCommands();
-    // setUpServer();
-    // try {
-    // TimeUnit.SECONDS.sleep(1);
-    // } catch (InterruptedException e) {
-    // // Handle exception
-    // }
-    // }
-    //
-    // @AfterClass
-    // public static void tearDownAfterClass() throws Exception {
-    // jftpd.destroy();
-    // }
+    @BeforeClass
+    public static void setUpBeforeClass() throws Exception {
+        setUpCommands();
+        setUpServer();
+        try {
+            TimeUnit.SECONDS.sleep(1);
+        } catch (InterruptedException e) {
+            // Handle exception
+        }
+    }
+
+    @AfterClass
+    public static void tearDownAfterClass() throws Exception {
+        jftpd.destroy();
+    }
 
     private FTPClient ftp;
     private Random random;
@@ -127,7 +133,6 @@ public class TestServer {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        assertTrue("FTP Store command failed", reply);
 
         try {
             f = new File(pathname);
@@ -145,8 +150,54 @@ public class TestServer {
             e.printStackTrace();
         }
 
+        assertTrue("FTP Store command failed", reply);
         assertEquals(inputString, fileString);
     }
+
+    @Test
+    public void testFileRetrieve() {
+        String pathname = "retr.temp";
+        boolean reply = false;
+
+        File f;
+
+        OutputStream file;
+        OutputStream output;
+
+        String fileString = "Test Output data";
+        byte[] fileBytes = fileString.getBytes();
+
+        String outputString = "";
+
+        f = new File(pathname);
+        try {
+            file = new FileOutputStream(f);
+            file.write(fileBytes);
+            file.flush();
+            file.close();
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        output = new ByteArrayOutputStream();
+        try {
+            reply = ftp.retrieveFile(pathname, output);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        outputString = output.toString();
+        f.delete();
+
+        assertTrue("FTP Retrieve command failed", reply);
+        assertEquals(fileString, outputString);
+    }
+
 
     public void fuzzTest() {
         while (true) {
@@ -155,6 +206,20 @@ public class TestServer {
                 fail("Action failed");
                 break;
             }
+        }
+    }
+
+    private static void setUpServer() {
+        ProcessBuilder pb = new ProcessBuilder();
+
+        String fullClassName = Server.class.getName();
+        String pathToClassFiles = new File("./classes").getPath();
+        pb.command("java", "-cp", pathToClassFiles, fullClassName, Integer.toString(serverPort));
+
+        try {
+            jftpd = pb.start();
+        } catch (IOException ex) {
+            Logger.getLogger(fullClassName).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -329,17 +394,4 @@ public class TestServer {
         return false;
     }
 
-    private static void setUpServer() {
-        ProcessBuilder pb = new ProcessBuilder();
-
-        String fullClassName = Server.class.getName();
-        String pathToClassFiles = new File("./classes").getPath();
-        pb.command("java", "-cp", pathToClassFiles, fullClassName, Integer.toString(serverPort));
-
-        try {
-            jftpd = pb.start();
-        } catch (IOException ex) {
-            Logger.getLogger(fullClassName).log(Level.SEVERE, null, ex);
-        }
-    }
 }
